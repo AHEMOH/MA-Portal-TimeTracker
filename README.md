@@ -1,4 +1,8 @@
 # MA-Portal-TimeTracker
+
+Mozilla Firefox Extension
+https://addons.mozilla.org/de/firefox/addon/ma-portal-timetracker/
+
 Calculate working hours for employees in v115erm MA-Portal
 
 TimeTracker evaluates entries and breaks from the MA portal and displays information about the end of the day in the table.
