@@ -75,8 +75,8 @@
 
     function getHHMI(timeMs) {
         let oDate = new Date(timeMs);
-        let mi = oDate.getMinutes();
-        let hr = oDate.getHours();
+        let mi = oDate.getUTCMinutes();
+        let hr = oDate.getUTCHours();
 
         return ("00" + hr).slice(-2) + ':' + ("00" + mi).slice(-2);
     }
