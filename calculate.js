@@ -68,12 +68,20 @@
         let saldoMs = Math.abs(WORKING_TIME_MS - timeMs);
         let leftTime = new Date(saldoMs).getTime();
 
-        let sSaldo = (WORKING_TIME_MS > timeMs ? '- ' : '+ ') + getHHMI(leftTime); //Saldo + / -
+        let sSaldo = (WORKING_TIME_MS > timeMs ? '- ' : '+ ') + getUTCHHMI(leftTime); //Saldo + / -
 
         oTable.rows[r].cells[SALDO_COLUMN].innerText = sSaldo;
     }
 
     function getHHMI(timeMs) {
+        let oDate = new Date(timeMs);
+        let mi = oDate.getMinutes();
+        let hr = oDate.getHours();
+
+        return ("00" + hr).slice(-2) + ':' + ("00" + mi).slice(-2);
+    }
+	
+	function getUTCHHMI(timeMs) {
         let oDate = new Date(timeMs);
         let mi = oDate.getUTCMinutes();
         let hr = oDate.getUTCHours();
@@ -114,7 +122,6 @@
                 } else { //New working period
                     workingTime += Date.now() - getEventBegin(oTable, r).time;
                     endTime = new Date(Date.now() + WORKING_TIME_MS - workingTime).getTime();
-
                     //If pause does not exists yet
                     if (getEventBegin(oTable, r).type == START_WORK) {
                         endTime = new Date(endTime + PAUSE_TIME_MS).getTime()
