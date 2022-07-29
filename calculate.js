@@ -10,11 +10,11 @@
     const BEGIN_TIME_COLUMN = 4;
     const END_EVENT_COLUMN = 5;
     const END_TIME_COLUMN = 6;
-	const INFO_COLUMN = 7;
-	const SALDO_COLUMN = 9;
+    const INFO_COLUMN = 7;
+    const SALDO_COLUMN = 9;
     const DATE_COLUMN = 0;
     const START_WORK = 'KO';
-	const APPROX_END_WORK = 'BIS';
+    const APPROX_END_WORK = 'BIS';
 
     const MS_IN_HOUR = 60 * 60 * 1000;
     const MS_IN_MINUTE = 60 * 1000;
@@ -55,37 +55,37 @@
         if (oEvent.type && oEvent.time) return oEvent;
 
     }
-	
-	function bold(sText) {
-		return '<b>' + sText + '</b>';
-	}
-	
-	function setInfo(oTable, r, sInfo) {
-		oTable.rows[r].cells[INFO_COLUMN].innerHTML = bold( sInfo );
-    }
-	
-	function setSaldo(oTable, r, timeMs) {
-		let saldoMs = Math.abs( WORKING_TIME_MS - timeMs );
-		let leftTime = new Date(saldoMs).getTime();
 
-		let sSaldo = ( WORKING_TIME_MS > timeMs ? '- ' : '+ ' ) + getHHMI( leftTime ); //Saldo + / -
-		
-		oTable.rows[r].cells[SALDO_COLUMN].innerHTML = bold( sSaldo );
+    function bold(sText) {
+        return '<b>' + sText + '</b>';
     }
-	
-	function getHHMI(timeMs){
-		let oDate = new Date(timeMs);
-		let mi = oDate.getMinutes();
-		let hr = oDate.getHours();
 
-		return ("00" + hr).slice(-2) + ':' + ("00" + mi).slice(-2);
-	}
-	
-	function setEndEvent(oTable, r, oEvent) {
-		if (oEvent.type && oEvent.time){
-			oTable.rows[r].cells[END_EVENT_COLUMN].innerHTML = bold( oEvent.type );
-			oTable.rows[r].cells[END_TIME_COLUMN].innerHTML = bold( getHHMI( oEvent.time ));
-		}
+    function setInfo(oTable, r, sInfo) {
+        oTable.rows[r].cells[INFO_COLUMN].innerText = sInfo;
+    }
+
+    function setSaldo(oTable, r, timeMs) {
+        let saldoMs = Math.abs(WORKING_TIME_MS - timeMs);
+        let leftTime = new Date(saldoMs).getTime();
+
+        let sSaldo = (WORKING_TIME_MS > timeMs ? '- ' : '+ ') + getHHMI(leftTime); //Saldo + / -
+
+        oTable.rows[r].cells[SALDO_COLUMN].innerText = sSaldo;
+    }
+
+    function getHHMI(timeMs) {
+        let oDate = new Date(timeMs);
+        let mi = oDate.getMinutes();
+        let hr = oDate.getHours();
+
+        return ("00" + hr).slice(-2) + ':' + ("00" + mi).slice(-2);
+    }
+
+    function setEndEvent(oTable, r, oEvent) {
+        if (oEvent.type && oEvent.time) {
+            oTable.rows[r].cells[END_EVENT_COLUMN].innerText = oEvent.type;
+            oTable.rows[r].cells[END_TIME_COLUMN].innerText = getHHMI(oEvent.time);
+        }
     }
 
     function calculateTime(oDocument) {
@@ -118,18 +118,17 @@
                     //If pause does not exists yet
                     if (getEventBegin(oTable, r).type == START_WORK) {
                         endTime = new Date(endTime + PAUSE_TIME_MS).getTime()
-						setInfo(oTable, r, ' incl. ' + PAUSE_MIN_A_DAY + ' Min Pause');
-						//setInfo(oTable, r, getSaldoHHMI( workingTime ));
+                        setInfo(oTable, r, ' incl. ' + PAUSE_MIN_A_DAY + ' Min Pause');
                     };
-					
-					setSaldo(oTable, r, workingTime);
-                    
-					let oEvent = {
-						type : APPROX_END_WORK,
-						time : endTime
-					};
 
-					setEndEvent(oTable, r, oEvent);
+                    setSaldo(oTable, r, workingTime);
+
+                    let oEvent = {
+                        type: APPROX_END_WORK,
+                        time: endTime
+                    };
+
+                    setEndEvent(oTable, r, oEvent);
                 }
 
             }
