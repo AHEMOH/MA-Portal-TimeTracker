@@ -10,8 +10,11 @@
     const BEGIN_TIME_COLUMN = 4;
     const END_EVENT_COLUMN = 5;
     const END_TIME_COLUMN = 6;
+	const INFO_COLUMN = 7;
+	const SALDO_COLUMN = 9;
     const DATE_COLUMN = 0;
     const START_WORK = 'KO';
+	const APPROX_END_WORK = 'BIS';
 
     const MS_IN_HOUR = 60 * 60 * 1000;
     const MS_IN_MINUTE = 60 * 1000;
@@ -37,28 +40,60 @@
     }
 
     function getEventBegin(oTable, r) {
-        let oReturn = {
+        let oEvent = {
             type: getEventType(oTable, r, BEGIN_EVENT_COLUMN),
             time: getEventTime(oTable, r, BEGIN_TIME_COLUMN)
         };
-        if (oReturn.type && oReturn.time) return oReturn;
+        if (oEvent.type && oEvent.time) return oEvent;
     }
 
     function getEventEnd(oTable, r) {
-        let oReturn = {
+        let oEvent = {
             type: getEventType(oTable, r, END_EVENT_COLUMN),
             time: getEventTime(oTable, r, END_TIME_COLUMN)
         };
-        if (oReturn.type && oReturn.time) return oReturn;
+        if (oEvent.type && oEvent.time) return oEvent;
 
+    }
+	
+	function bold(sText) {
+		return '<b>' + sText + '</b>';
+	}
+	
+	function setInfo(oTable, r, sInfo) {
+		oTable.rows[r].cells[INFO_COLUMN].innerHTML = bold( sInfo );
+    }
+	
+	function setSaldo(oTable, r, timeMs) {
+		let saldoMs = Math.abs( WORKING_TIME_MS - timeMs );
+		let leftTime = new Date(saldoMs).getTime();
+
+		let sSaldo = ( WORKING_TIME_MS > timeMs ? '- ' : '+ ' ) + getHHMI( leftTime ); //Saldo + / -
+		
+		oTable.rows[r].cells[SALDO_COLUMN].innerHTML = bold( sSaldo );
+    }
+	
+	function getHHMI(timeMs){
+		let oDate = new Date(timeMs);
+		let mi = oDate.getMinutes();
+		let hr = oDate.getHours();
+
+		return ("00" + hr).slice(-2) + ':' + ("00" + mi).slice(-2);
+	}
+	
+	function setEndEvent(oTable, r, oEvent) {
+		if (oEvent.type && oEvent.time){
+			oTable.rows[r].cells[END_EVENT_COLUMN].innerHTML = bold( oEvent.type );
+			oTable.rows[r].cells[END_TIME_COLUMN].innerHTML = bold( getHHMI( oEvent.time ));
+		}
     }
 
     function calculateTime(oDocument) {
-        var startTime, workingTime;
+        let startTime, workingTime;
 
-        var oTable = oDocument.getElementById('tvt_WPTPROT');
+        let oTable = oDocument.getElementById('tvt_WPTPROT');
 
-        for (var r = 1, n = oTable.rows.length; r < n; r++) {
+        for (let r = 1, n = oTable.rows.length; r < n; r++) {
 
             //Skip empty rows
             if (!getEventBegin(oTable, r)) {
@@ -73,30 +108,28 @@
 
             if (startTime) {
 
-                //If pause exists
+                //If pause end exists
                 if (getEventEnd(oTable, r)) {
                     workingTime += getEventEnd(oTable, r).time - getEventBegin(oTable, r).time;
-                } else { //Pause is empty
+                } else { //New working period
                     workingTime += Date.now() - getEventBegin(oTable, r).time;
-
-                    var newdate = new Date(Date.now() + WORKING_TIME_MS - workingTime);
+                    endTime = new Date(Date.now() + WORKING_TIME_MS - workingTime).getTime();
 
                     //If pause does not exists yet
                     if (getEventBegin(oTable, r).type == START_WORK) {
-                        newdate = new Date(newdate.getTime() + PAUSE_TIME_MS)
+                        endTime = new Date(endTime + PAUSE_TIME_MS).getTime()
+						setInfo(oTable, r, ' incl. ' + PAUSE_MIN_A_DAY + ' Min Pause');
+						//setInfo(oTable, r, getSaldoHHMI( workingTime ));
                     };
+					
+					setSaldo(oTable, r, workingTime);
+                    
+					let oEvent = {
+						type : APPROX_END_WORK,
+						time : endTime
+					};
 
-                    var mi = newdate.getMinutes();
-                    var hr = newdate.getHours();
-
-                    text = ("00" + hr).slice(-2) + ':' + ("00" + mi).slice(-2);
-
-                    if (getEventBegin(oTable, r).type == START_WORK) {
-                        text = text + ' incl. ' + PAUSE_MIN_A_DAY + ' Min Pause'
-                    };
-
-                    oTable.rows[r].cells[END_EVENT_COLUMN].innerText = 'Gehen um';
-                    oTable.rows[r].cells[END_TIME_COLUMN].innerText = text;
+					setEndEvent(oTable, r, oEvent);
                 }
 
             }
@@ -106,9 +139,9 @@
     function waitForDocument(oDocument, aFrames) {
 
         if (aFrames[0]) {
-            var sContent = aFrames[0];
-            var iframe = oDocument.getElementById(sContent);
-            var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            let sContent = aFrames[0];
+            let iframe = oDocument.getElementById(sContent);
+            let iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
             if (iframeDoc.readyState == 'complete') {
                 //check next iframe
